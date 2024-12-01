@@ -1,0 +1,19 @@
+# postgresql-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  DB_HOST: postgres-service
+  DB_NAME: clients_db
+
+---
+# postgresql-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+data:
+  DB_USER: cG9zdGdyZXNfdXNlcg==  # postgres_user (Base64 encoded)
+  DB_PASS: cG9zdGdyZXNfcGFzc3dvcmQ=  # postgres_password (Base64 encoded)

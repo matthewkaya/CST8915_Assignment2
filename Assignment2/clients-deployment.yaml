@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clients-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clients-service
+  template:
+    metadata:
+      labels:
+        app: clients-service
+    spec:
+      containers:
+      - name: clients-container
+        image: matthewkaya/cst8915_assignment2:clients
+        ports:
+        - containerPort: 5001
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        - secretRef:
+            name: postgres-secret
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clients-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: clients-service
+  ports:
+  - protocol: TCP
+    port: 5001
+    targetPort: 5001
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: clients-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: clients-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: partners-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: partners-service
+  template:
+    metadata:
+      labels:
+        app: partners-service
+    spec:
+      containers:
+      - name: partners-container
+        image: matthewkaya/cst8915_assignment2:partners
+        ports:
+        - containerPort: 5003
+        envFrom:
+        - configMapRef:
+            name: redis-config
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: partners-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: partners-service
+  ports:
+  - protocol: TCP
+    port: 5003
+    targetPort: 5003
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: partners-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: partners-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
